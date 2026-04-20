@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 
 from .config import Config
@@ -25,5 +25,9 @@ def create_app(config=Config):
     app.register_blueprint(users_bp, url_prefix="/users")
     app.register_blueprint(posts_bp, url_prefix="/posts")
     app.register_blueprint(feed_bp, url_prefix="/feed")
+
+    @app.get("/")
+    def index():
+        return jsonify({"status": "ok", "message": "Social media API is running"})
 
     return app
