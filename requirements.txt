@@ -1,0 +1,8 @@
+flask
+flask-jwt-extended
+pymongo[srv]
+neo4j
+redis
+python-dotenv
+pytest
+black

@@ -41,5 +41,31 @@ Storing Session Tokens with TTL (time to live)
 ## Key Stack
 
 - Python
-- Flask/Django
+- Flask
 - Docker
+
+---
+
+## Getting Started
+
+**Prerequisites**: Docker and Docker Compose installed.
+
+```bash
+# 1. Copy environment variables
+cp .env.example .env
+
+# 2. Start everything (app + databases)
+docker compose up -d --build
+```
+
+The API will be available at `http://localhost:8000`.
+
+To view logs:
+```bash
+docker compose logs -f app
+```
+
+To stop:
+```bash
+docker compose down
+```

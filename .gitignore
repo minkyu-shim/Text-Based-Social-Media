@@ -8,6 +8,8 @@ __pycache__/
 dist/
 build/
 
+CLAUDE.md
+
 # Virtual environment
 .venv/
 venv/
@@ -15,7 +17,6 @@ env/
 
 # Environment variables
 .env
-.env.*
 
 # IDE
 .idea/
