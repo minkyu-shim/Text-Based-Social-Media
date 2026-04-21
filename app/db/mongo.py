@@ -11,7 +11,7 @@ def init_mongo(app):
 
     @app.teardown_appcontext
     def close(_):
-        pass  # MongoClient is thread-safe and reused across requests
+        _client.close()  # MongoClient is thread-safe and reused across requests
 
 
 def get_db():
