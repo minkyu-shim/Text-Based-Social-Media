@@ -27,12 +27,12 @@ Text-focused social media platform using MongoDB, Neo4j, and Redis.
 
 ## Phase 3 — Posts
 
-- [ ] `POST /posts` — create a post (author_id, content, timestamp, likes_count: 0) in MongoDB
-- [ ] `GET /posts/<id>` — fetch a single post
+- [done] `POST /posts` — create a post (author_id, content, timestamp, likes_count: 0) in MongoDB
+- [done] `GET /posts/<id>` — fetch a single post
 - [ ] `DELETE /posts/<id>` — delete own post
-- [ ] `POST /posts/<id>/like` — increment `likes_count` via `$inc`
-- [ ] `DELETE /posts/<id>/like` — decrement `likes_count` via `$inc`
-- [ ] `GET /users/<id>/posts` — fetch all posts by a user
+- [done] `PUT /posts/<id>/like` — increment `likes_count` via `$inc`
+- [done] `PUT /posts/<id>/like` — decrement `likes_count` via `$inc`
+- [done] `GET /users/<id>/posts` — fetch all posts by a user
 
 ---
 
