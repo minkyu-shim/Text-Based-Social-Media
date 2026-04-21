@@ -4,5 +4,6 @@ pymongo[srv]
 neo4j
 redis
 python-dotenv
+pydantic
 pytest
 black
