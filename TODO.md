@@ -47,7 +47,6 @@ Text-focused social media platform using MongoDB, Neo4j, and Redis.
 - [ ] `GET /users/<id>/followers` — list users following `<id>`
 - [ ] `GET /users/<id>/following` — list users `<id>` follows
 - [ ] `GET /users/<id>/distance/<target_id>` — return hop count via Neo4j `shortestPath()`
-
 ---
 
 ## Phase 5 — Feed & Discovery
