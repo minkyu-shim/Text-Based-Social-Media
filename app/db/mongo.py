@@ -9,9 +9,7 @@ def init_mongo(app):
     _client = MongoClient(app.config["MONGO_URI"])
     _db_name = app.config["MONGO_DB"]
 
-    @app.teardown_appcontext
-    def close(_):
-        _client.close()  # MongoClient is thread-safe and reused across requests
+    _client[_db_name]["users"].create_index("email", unique=True)
 
 
 def get_db():
