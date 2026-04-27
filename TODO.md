@@ -18,7 +18,7 @@ Text-focused social media platform using MongoDB, Neo4j, and Redis.
 
 ## Phase 2 — Auth
 
-- [ ] `POST /register` — create user in MongoDB (profile data) and Neo4j (user node), return JWT
+- [done] `POST /register` — create user in MongoDB (profile data) and Neo4j (user node), return JWT
 - [ ] `POST /login` — verify credentials, return JWT
 - [ ] `POST /logout` — add JWT to Redis blocklist with TTL matching token expiry
 - [ ] Add JWT-required middleware to protected routes (blocklist check on every request)
@@ -47,7 +47,6 @@ Text-focused social media platform using MongoDB, Neo4j, and Redis.
 - [ ] `GET /users/<id>/followers` — list users following `<id>`
 - [ ] `GET /users/<id>/following` — list users `<id>` follows
 - [ ] `GET /users/<id>/distance/<target_id>` — return hop count via Neo4j `shortestPath()`
-
 ---
 
 ## Phase 5 — Feed & Discovery
