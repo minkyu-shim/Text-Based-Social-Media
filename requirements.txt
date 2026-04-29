@@ -4,6 +4,7 @@ pymongo[srv]
 neo4j
 redis
 python-dotenv
-pydantic
+pydantic[email]
 pytest
 black
+flask-bcrypt
