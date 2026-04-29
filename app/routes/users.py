@@ -1,8 +1,32 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.models.user import UserUpdate
 from app.services import user_service
 
 users_bp = Blueprint("users", __name__)
+
+
+@users_bp.get("/me")
+@jwt_required()
+def get_my_profile():
+    current_user = get_jwt_identity()
+    user = user_service.get_profile(current_user)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify(user), 200
+
+
+@users_bp.patch("/me")
+@jwt_required()
+def update_my_profile():
+    current_user = get_jwt_identity()
+    updates = UserUpdate(**request.get_json()).model_dump(exclude_none=True)
+    if not updates:
+        return jsonify({"error": "No valid fields to update"}), 400
+    user = user_service.update_profile(current_user, updates)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify(user), 200
 
 
 @users_bp.get("/<user_id>")

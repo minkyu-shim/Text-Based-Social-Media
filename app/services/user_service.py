@@ -1,6 +1,26 @@
 from bson import ObjectId
 from app.db.mongo import get_db
 from app.db.neo4j import get_session
+from app.models.user import UserResponse
+
+
+def _serialize(user: dict) -> dict:
+    # MongoDB uses "_id" (ObjectId) as the primary key; rename it to "id" (plain string) for JSON.
+    # Passing through UserResponse also strips sensitive fields like password_hash.
+    user["id"] = str(user.pop("_id"))
+    return UserResponse(**user).model_dump()
+
+
+def _enrich_users(user_ids: list) -> list:
+    # Neo4j only stores user IDs; look up their usernames in MongoDB in a single batch query.
+    if not user_ids:
+        return []
+    db = get_db()
+    users = db.users.find(
+        {"_id": {"$in": [ObjectId(uid) for uid in user_ids]}},
+        {"username": 1},  # projection: fetch only the username field
+    )
+    return [{"id": str(u["_id"]), "username": u["username"]} for u in users]
 
 
 def get_profile(user_id: str) -> dict | None:
@@ -8,8 +28,19 @@ def get_profile(user_id: str) -> dict | None:
     user = db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         return None
-    user["id"] = str(user.pop("_id"))
-    return user
+    return _serialize(user)
+
+
+def update_profile(user_id: str, updates: dict) -> dict | None:
+    db = get_db()
+    user = db.users.find_one_and_update(
+        {"_id": ObjectId(user_id)},
+        {"$set": updates},
+        return_document=True,
+    )
+    if not user:
+        return None
+    return _serialize(user)
 
 
 def follow(follower_id: str, target_id: str):
@@ -100,7 +131,8 @@ def get_followers(user_id: str) -> list:
             """,
             user_id=user_id,
         )
-        return [record["id"] for record in result]
+        ids = [record["id"] for record in result]
+    return _enrich_users(ids)
 
 
 def get_following(user_id: str) -> list:
@@ -112,7 +144,8 @@ def get_following(user_id: str) -> list:
             """,
             user_id=user_id,
         )
-        return [record["id"] for record in result]
+        ids = [record["id"] for record in result]
+    return _enrich_users(ids)
 
 
 def hop_distance(user_id: str, target_id: str) -> int | None:
