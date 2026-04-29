@@ -1,6 +1,6 @@
-from db.user_queries import UserQueries
-from db.post_queries import PostQueries
-from db.auth_queries import AuthQueries
+from app.db.user_queries import UserQueries
+from app.db.post_queries import PostQueries
+from app.db.auth_queries import AuthQueries
 
 
 class Queries:
