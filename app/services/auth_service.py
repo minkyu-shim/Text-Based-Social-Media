@@ -1,33 +1,27 @@
-from app.db.mongo import get_db
-from app.db.neo4j import get_session
-from app.db.redis import get_redis
+from flask_bcrypt import Bcrypt
+from app.queries.queries_interface import Queries
+
+bcrypt = Bcrypt()
 
 
 def register_user(username: str, email: str, password_hash: str) -> dict:
-    db = get_db()
-    user = {"username": username, "email": email, "password": password_hash}
-    result = db["users"].insert_one(user)
-    user_id = str(result.inserted_id)
-
-    with get_session() as session:
-        session.run(
-            "CREATE (u:User {id: $id, username: $username, email: $email})",
-            id=user_id, username=username, email=email,
-        )
-
-    return {"id": user_id, "username": username, "email": email}
+    user = Queries.auth.create_user(username, email, password_hash)
+    Queries.auth.create_user_node(user["id"], username, email)
+    return user
 
 
 def verify_credentials(email: str, password: str) -> dict | None:
-    # TODO: find user in MongoDB, verify hashed password, return user dict or None
-    raise NotImplementedError
+    user = Queries.auth.find_user_by_email(email)
+    if not user:
+        return None
+    if not bcrypt.check_password_hash(user["password"], password):
+        return None
+    return {"id": str(user["_id"]), "username": user["username"], "email": user["email"]}
 
 
 def blocklist_token(jti: str, ttl_seconds: int):
-    # TODO: redis SET blocklist:<jti> 1 EX ttl_seconds
-    raise NotImplementedError
+    Queries.auth.blocklist_token(jti, ttl_seconds)
 
 
 def is_token_blocked(jti: str) -> bool:
-    # TODO: redis EXISTS blocklist:<jti>
-    raise NotImplementedError
+    return Queries.auth.is_token_blocked(jti)
