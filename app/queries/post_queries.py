@@ -1,12 +1,15 @@
 from app.db.mongo import get_db
 from bson import ObjectId
+from models.post import PostCreate, PostResponse
 
 
 class PostQueries:
+    @staticmethod
     def get_all_posts():
         db = get_db()
         return list(db.posts.find({}))
 
+    @staticmethod
     def get_post_by_id(post_id):
         db = get_db()
         try:
@@ -18,6 +21,9 @@ class PostQueries:
             print(f"Error: {e}")
             raise
 
+
+
+    @staticmethod
     def get_post_by_user_id(user_id):
         db = get_db()
         try:
@@ -29,7 +35,9 @@ class PostQueries:
             print(f"Error: {e}")
             raise
 
-    def create_post(post):
+
+    @staticmethod
+    def create_post(post: PostResponse):
         db = get_db()
         try:
             new_post = db.posts.insert_one({
@@ -43,6 +51,8 @@ class PostQueries:
             print(f"Error creating post: {e}")
             raise
 
+
+    @staticmethod
     def like_post(post_id):
         db = get_db()
         try:
@@ -53,6 +63,8 @@ class PostQueries:
             print(f"Error liking post {e}")
             raise
 
+
+    @staticmethod
     def unlike_post(post_id):
         db = get_db()
         try:
@@ -63,6 +75,8 @@ class PostQueries:
             print(f"Error unliking post {e}")
             raise
 
+
+    @staticmethod
     def delete_post_by_id(post_id):
         db = get_db()
         try:

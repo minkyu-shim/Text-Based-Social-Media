@@ -1,10 +1,11 @@
+import time
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt, create_access_token
+from flask_bcrypt import Bcrypt
 from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError
-from app.models.auth import RegisterRequest
-from app.services.auth_service import register_user
-from flask_bcrypt import Bcrypt
+from app.models.auth import RegisterRequest, LoginRequest
+from app.services.auth_service import register_user, verify_credentials, blocklist_token
 
 auth_bp = Blueprint("auth", __name__)
 bcrypt = Bcrypt()
@@ -26,12 +27,24 @@ def register():
 
 @auth_bp.post("/login")
 def login():
-    # TODO: look up user in MongoDB, verify password, return JWT
-    raise NotImplementedError
+    try:
+        body = LoginRequest.model_validate(request.get_json())
+        user = verify_credentials(body.email, body.password)
+        if not user:
+            return jsonify({"error": "Invalid email or password"}), 401
+        token = create_access_token(identity=user["id"])
+        return jsonify({"access_token": token, "token_type": "bearer"}), 200
+    except ValidationError as e:
+        return jsonify({"errors": e.errors()}), 422
 
 
 @auth_bp.post("/logout")
 @jwt_required()
 def logout():
-    # TODO: add JWT jti to Redis blocklist with TTL = remaining token lifetime
-    raise NotImplementedError
+    claims = get_jwt()
+    jti = claims["jti"]
+    exp = claims["exp"]
+    ttl = int(exp - time.time())
+    if ttl > 0:
+        blocklist_token(jti, ttl)
+    return jsonify({"message": "Logged out"}), 200

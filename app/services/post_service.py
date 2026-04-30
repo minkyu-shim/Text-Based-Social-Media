@@ -1,6 +1,7 @@
 from app.db.mongo import get_db
 from app.queries.queries_interface import Queries
 from datetime import datetime
+from app.db.queries_interface import Neo4jQueries as _neo4j
 
 
 def create_post(author_id: str, content: str) -> dict:
@@ -43,16 +44,30 @@ def delete_post(post_id: str, requester_id: str):
         raise Exception(f"Failed to delete post: {str(e)}")
 
 
-def like_post(post_id: str):
+def like_post(user_id, post_id: str):
     try:
+        if _neo4j.is_liked(user_id, post_id):
+            raise ValueError("Post already liked")
+        _neo4j.like_post(user_id, post_id)
         Queries.posts.increment_likes(post_id, 1)
+        
+    except ValueError:
+        raise
+    
     except Exception as e:
         raise Exception(f"Failed to like post: {str(e)}")
 
 
-def unlike_post(post_id: str):
+def unlike_post(post_id: str, user_id: str):
     try:
+        if not _neo4j.is_liked(user_id, post_id):
+            raise ValueError("Post not liked")
+        _neo4j.unlike_post(user_id, post_id)
         Queries.posts.increment_likes(post_id, -1)
+        
+    except ValueError:
+        raise
+    
     except Exception as e:
         raise Exception(f"Failed to unlike post: {str(e)}")
 
