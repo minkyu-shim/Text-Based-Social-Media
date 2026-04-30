@@ -1,15 +1,13 @@
-from models.user import UserResponse
-from models.post import PostCreate, PostResponse
-from db.mongo import get_db
+from app.db.mongo import get_db
 from bson import ObjectId
+from models.post import PostCreate, PostResponse
 
 
 class PostQueries:
     @staticmethod
     def get_all_posts():
-        db = get_db
-        return [db.posts.find({})]
-
+        db = get_db()
+        return list(db.posts.find({}))
 
     @staticmethod
     def get_post_by_id(post_id):
@@ -24,11 +22,12 @@ class PostQueries:
             raise
 
 
+
     @staticmethod
     def get_post_by_user_id(user_id):
         db = get_db()
         try:
-            user_posts = [db.posts.find({'user_id': ObjectId(user_id)})]
+            user_posts = list(db.posts.find({'user_id': ObjectId(user_id)}))
             if not user_posts:
                 raise ValueError("Post not found")
             return user_posts
@@ -55,11 +54,10 @@ class PostQueries:
 
     @staticmethod
     def like_post(post_id):
-        db = get_db
+        db = get_db()
         try:
-            db.posts.update_one({'_id' : ObjectId(post_id)},
-                            {'$inc' : {'likes_count' : 1}
-        })
+            db.posts.update_one({'_id': ObjectId(post_id)},
+                                {'$inc': {'likes_count': 1}})
             return True
         except Exception as e:
             print(f"Error liking post {e}")
@@ -68,11 +66,10 @@ class PostQueries:
 
     @staticmethod
     def unlike_post(post_id):
-        db = get_db
+        db = get_db()
         try:
-            db.posts.update_one({'_id' : ObjectId(post_id)},
-                            {'$inc' : {'likes_count' : -1}
-        })
+            db.posts.update_one({'_id': ObjectId(post_id)},
+                                {'$inc': {'likes_count': -1}})
             return True
         except Exception as e:
             print(f"Error unliking post {e}")
@@ -81,9 +78,9 @@ class PostQueries:
 
     @staticmethod
     def delete_post_by_id(post_id):
-        db = get_db
+        db = get_db()
         try:
-            db.posts.delete_one({'_id' : ObjectId(post_id)})
+            db.posts.delete_one({'_id': ObjectId(post_id)})
             print(f"Post with id: {post_id} was deleted")
             return True
         except Exception as e:

@@ -1,4 +1,4 @@
-from app.db.neo4j_queries import Neo4jQueries
+from app.queries.neo4j_queries import Neo4jQueries
 from app.db.mongo import get_db
 from app.services import post_service
 
