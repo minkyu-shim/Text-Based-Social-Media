@@ -5,11 +5,13 @@ from bson import ObjectId
 
 
 class PostQueries:
+    @staticmethod
     def get_all_posts():
         db = get_db
         return [db.posts.find({})]
 
 
+    @staticmethod
     def get_post_by_id(post_id):
         db = get_db()
         try:
@@ -22,6 +24,7 @@ class PostQueries:
             raise
 
 
+    @staticmethod
     def get_post_by_user_id(user_id):
         db = get_db()
         try:
@@ -34,6 +37,7 @@ class PostQueries:
             raise
 
 
+    @staticmethod
     def create_post(post: PostResponse):
         db = get_db()
         try:
@@ -49,6 +53,7 @@ class PostQueries:
             raise
 
 
+    @staticmethod
     def like_post(post_id):
         db = get_db
         try:
@@ -61,6 +66,7 @@ class PostQueries:
             raise
 
 
+    @staticmethod
     def unlike_post(post_id):
         db = get_db
         try:
@@ -73,6 +79,7 @@ class PostQueries:
             raise
 
 
+    @staticmethod
     def delete_post_by_id(post_id):
         db = get_db
         try:
