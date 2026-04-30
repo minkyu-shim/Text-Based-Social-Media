@@ -1,5 +1,5 @@
 from app.db.mongo import get_db
-from app.db.queries_interface import Queries
+from app.queries.queries_interface import Queries
 from datetime import datetime
 
 

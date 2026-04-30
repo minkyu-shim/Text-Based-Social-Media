@@ -1,4 +1,4 @@
-from app.db.user_queries import UserQueries
+from app.queries.user_queries import UserQueries
 from app.models.user import UserResponse
 
 
