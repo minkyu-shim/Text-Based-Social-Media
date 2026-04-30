@@ -8,18 +8,24 @@ class UserQueries:
     # -- MongoDB --
 
     @staticmethod
-    def get_by_id(user_id: str) -> dict | None:
+    def get_by_id(user_id: str) -> dict:
         db = get_db()
-        return db.users.find_one({"_id": ObjectId(user_id)})
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise ValueError("User not found")
+        return user
 
     @staticmethod
-    def update(user_id: str, updates: dict) -> dict | None:
+    def update(user_id: str, updates: dict) -> dict:
         db = get_db()
-        return db.users.find_one_and_update(
+        user = db.users.find_one_and_update(
             {"_id": ObjectId(user_id)},
             {"$set": updates},
             return_document=True,
         )
+        if not user:
+            raise ValueError("User not found")
+        return user
 
     @staticmethod
     def get_by_ids(user_ids: list) -> list:

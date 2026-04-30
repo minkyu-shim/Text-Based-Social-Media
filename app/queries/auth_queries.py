@@ -24,9 +24,12 @@ class AuthQueries:
             )
 
     @staticmethod
-    def find_user_by_email(email: str) -> dict | None:
+    def find_user_by_email(email: str) -> dict:
         db = get_db()
-        return db["users"].find_one({"email": email})
+        user = db["users"].find_one({"email": email})
+        if not user:
+            raise ValueError("User not found")
+        return user
 
     @staticmethod
     def blocklist_token(jti: str, ttl_seconds: int):
