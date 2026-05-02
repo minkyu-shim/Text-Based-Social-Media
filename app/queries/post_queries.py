@@ -27,7 +27,7 @@ class PostQueries:
     def get_post_by_user_id(user_id):
         db = get_db()
         try:
-            user_posts = list(db.posts.find({'user_id': ObjectId(user_id)}))
+            user_posts = list(db.posts.find({"author_id": user_id}))
             if not user_posts:
                 raise ValueError("Post not found")
             return user_posts
