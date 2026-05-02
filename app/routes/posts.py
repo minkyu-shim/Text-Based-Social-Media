@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from services.post_service import *   # Import your service module
+from app.services.post_service import *
 
 posts_bp = Blueprint("posts", __name__)
 

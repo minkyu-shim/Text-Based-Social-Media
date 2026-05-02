@@ -1,6 +1,6 @@
 from app.db.mongo import get_db
 from bson import ObjectId
-from models.post import PostCreate, PostResponse
+from app.models.post import PostCreate, PostResponse
 
 
 class PostQueries:

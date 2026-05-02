@@ -1,7 +1,7 @@
 from app.db.mongo import get_db
 from app.queries.queries_interface import Queries
 from datetime import datetime
-from app.db.queries_interface import Neo4jQueries as _neo4j
+from app.queries.queries_interface import Neo4jQueries as _neo4j
 
 
 def create_post(author_id: str, content: str) -> dict:
