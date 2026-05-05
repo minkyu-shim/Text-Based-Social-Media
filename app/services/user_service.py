@@ -2,6 +2,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from app.queries.queries_interface import Queries
 from app.models.user import UserResponse
+from app.services.notification_service import send_notification
 
 
 def _validate_object_id(user_id: str) -> None:
@@ -48,6 +49,7 @@ def follow(follower_id: str, target_id: str):
     if follower_id == target_id:
         raise ValueError("Cannot follow yourself")
     Queries.users.follow(follower_id, target_id)
+    send_notification(target_id, "follow", follower_id)
 
 
 def unfollow(follower_id: str, target_id: str):
@@ -80,6 +82,7 @@ def add_close_friend(user_id: str, target_id: str):
     if user_id == target_id:
         raise ValueError("Cannot add yourself as a close friend")
     Queries.users.add_close_friend(user_id, target_id)
+    send_notification(target_id, "close_friend", user_id)
 
 
 def remove_close_friend(user_id: str, target_id: str):
