@@ -9,6 +9,7 @@ from .routes.auth import auth_bp
 from .routes.users import users_bp
 from .routes.posts import posts_bp
 from .routes.feed import feed_bp
+from .routes.notifications import notifications_bp
 
 
 def create_app(config=Config):
@@ -30,6 +31,7 @@ def create_app(config=Config):
     app.register_blueprint(users_bp, url_prefix="/users")
     app.register_blueprint(posts_bp, url_prefix="/posts")
     app.register_blueprint(feed_bp, url_prefix="/feed")
+    app.register_blueprint(notifications_bp, url_prefix="/notifications")
 
     @app.get("/")
     def index():
