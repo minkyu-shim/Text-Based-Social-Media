@@ -91,5 +91,4 @@ def get_posts_by_user(user_id: str) -> list:
 
 
 def get_posts_by_users(user_ids: list[str], limit: int = 20) -> list:
-    # Not implemented in PostQueries yet
-    return []
+    return Queries.posts.get_posts_by_user_ids(user_ids, limit)
