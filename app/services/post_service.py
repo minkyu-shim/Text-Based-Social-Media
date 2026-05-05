@@ -1,9 +1,7 @@
 from app.queries.queries_interface import Queries
-from app.queries.neo4j_queries import Neo4jQueries as _neo4j_cls
 from app.models.post import PostResponse
 from datetime import datetime
 
-_neo4j = _neo4j_cls()
 
 
 def create_post(author_id: str, content: str) -> dict:
@@ -56,9 +54,9 @@ def delete_post(post_id: str, requester_id: str):
 
 def like_post(user_id: str, post_id: str):
     try:
-        if _neo4j.is_liked(user_id, post_id):
+        if Queries.neo4j.is_liked(user_id, post_id):
             raise ValueError("Post already liked")
-        _neo4j.like_post(user_id, post_id)
+        Queries.neo4j.like_post(user_id, post_id)
         Queries.posts.like_post(post_id)
     except ValueError:
         raise
@@ -68,9 +66,9 @@ def like_post(user_id: str, post_id: str):
 
 def unlike_post(user_id: str, post_id: str):
     try:
-        if not _neo4j.is_liked(user_id, post_id):
+        if not Queries.neo4j.is_liked(user_id, post_id):
             raise ValueError("Post not liked")
-        _neo4j.unlike_post(user_id, post_id)
+        Queries.neo4j.unlike_post(user_id, post_id)
         Queries.posts.unlike_post(post_id)
     except ValueError:
         raise
