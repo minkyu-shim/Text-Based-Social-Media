@@ -15,7 +15,12 @@ def create_app(config=Config):
     app = Flask(__name__)
     app.config.from_object(config)
 
-    JWTManager(app)
+    jwt = JWTManager(app)
+
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        from .services.auth_service import is_token_blocked
+        return is_token_blocked(jwt_payload["jti"])
 
     init_mongo(app)
     init_neo4j(app)

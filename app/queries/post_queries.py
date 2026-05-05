@@ -1,19 +1,25 @@
 from app.db.mongo import get_db
 from bson import ObjectId
-from models.post import PostCreate, PostResponse
+from app.models.post import PostCreate, PostResponse
+
+
+def _serialize(post: dict) -> dict:
+    post["id"] = str(post.pop("_id"))
+    return post
 
 
 class PostQueries:
+
     @staticmethod
     def get_all_posts():
         db = get_db()
-        return list(db.posts.find({}))
+        return [_serialize(p) for p in db.posts.find({})]
 
     @staticmethod
     def get_post_by_id(post_id):
         db = get_db()
         try:
-            post = db.posts.find_one({'_id': ObjectId(post_id)})
+            post = db.posts.find_one({"_id": ObjectId(post_id)})
             if not post:
                 raise ValueError("Post not found")
             return post
@@ -21,67 +27,99 @@ class PostQueries:
             print(f"Error: {e}")
             raise
 
-
-
     @staticmethod
     def get_post_by_user_id(user_id):
         db = get_db()
         try:
-            user_posts = list(db.posts.find({'user_id': ObjectId(user_id)}))
-            if not user_posts:
+            posts = list(db.posts.find({"author_id": user_id}))
+            if not posts:
                 raise ValueError("Post not found")
-            return user_posts
+            return posts
         except Exception as e:
             print(f"Error: {e}")
             raise
 
+    @staticmethod
+    def get_posts_by_user_ids(user_ids: list, limit: int = 20) -> list:
+
+        db = get_db()
+        posts = list(
+            db.posts.find({"author_id": {"$in": user_ids}})
+            .sort("timestamp", -1)
+            .limit(limit)
+        )
+        
+        return [_serialize(p) for p in posts]
+
+
+    @staticmethod
+    def search_posts(query: str, limit: int = 20) -> list:
+
+        db = get_db()
+        pipeline = [
+                {"$search": {"index": "posts_search", "text": {
+                    "query": query, "path": "content",
+                    "fuzzy": {"maxEdits": 1}
+                }}},
+                {"$limit": limit},
+                {"$addFields": {"id": {"$toString": "$_id"}}},
+                {"$project": {"_id": 0}}
+            ]
+        return list(db.posts.aggregate(pipeline))
+
+    @staticmethod
+    def get_latest_post_per_user(user_ids: list) -> list:
+
+        db = get_db()
+        pipeline = [
+            {"$match": {"author_id": {"$in": user_ids}}},
+            {"$sort": {"timestamp": -1}},
+            {"$group": {"_id": "$author_id", "post": {"$first": "$$ROOT"}}},
+            {"$replaceRoot": {"newRoot": "$post"}},
+        ]
+        posts = list(db.posts.aggregate(pipeline))
+        return [_serialize(p) for p in posts]
 
     @staticmethod
     def create_post(post: PostResponse):
         db = get_db()
         try:
-            new_post = db.posts.insert_one({
-                'author_id': post.author_id,
-                'content': post.content,
-                'timestamp': post.created_at,
-                'likes_count': 0
+            result = db.posts.insert_one({
+                "author_id": post.author_id,
+                "content": post.content,
+                "timestamp": post.created_at,
+                "likes_count": 0,
             })
-            return str(new_post.inserted_id)
+            return str(result.inserted_id)
         except Exception as e:
             print(f"Error creating post: {e}")
             raise
-
 
     @staticmethod
     def like_post(post_id):
         db = get_db()
         try:
-            db.posts.update_one({'_id': ObjectId(post_id)},
-                                {'$inc': {'likes_count': 1}})
+            db.posts.update_one({"_id": ObjectId(post_id)}, {"$inc": {"likes_count": 1}})
             return True
         except Exception as e:
             print(f"Error liking post {e}")
             raise
 
-
     @staticmethod
     def unlike_post(post_id):
         db = get_db()
         try:
-            db.posts.update_one({'_id': ObjectId(post_id)},
-                                {'$inc': {'likes_count': -1}})
+            db.posts.update_one({"_id": ObjectId(post_id)}, {"$inc": {"likes_count": -1}})
             return True
         except Exception as e:
             print(f"Error unliking post {e}")
             raise
 
-
     @staticmethod
     def delete_post_by_id(post_id):
         db = get_db()
         try:
-            db.posts.delete_one({'_id': ObjectId(post_id)})
-            print(f"Post with id: {post_id} was deleted")
+            db.posts.delete_one({"_id": ObjectId(post_id)})
             return True
         except Exception as e:
             print(f"Error deleting post: {e}")

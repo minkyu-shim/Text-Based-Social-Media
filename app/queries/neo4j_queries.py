@@ -1,11 +1,11 @@
-from db.neo4j import *
+from app.db.neo4j import get_driver, get_session
 
 class Neo4jQueries:
     
-    def create_user(self, user_id: str):
-        with get_session() as s:
+    # def create_user(self, user_id: str):
+    #     with get_session() as s:
             
-            s.run("MERGE (u:User {id: $id})", id=user_id)
+    #         s.run("MERGE (u:User {id: $id})", id=user_id)
 
 
     def follow_user(self, follower_id: str, following_id: str):
