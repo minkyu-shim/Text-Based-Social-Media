@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8000:5000"
+      - "5000:5000"
     env_file: .env
     volumes:
       - .:/app   # live reload: local changes reflect immediately

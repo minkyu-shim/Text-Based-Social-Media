@@ -30,8 +30,6 @@ class AuthQueries:
     def find_user_by_email(email: str) -> dict:
         db = get_db()
         user = db["users"].find_one({"email": email})
-        if not user:
-            raise ValueError("User not found")
         return user
 
     @staticmethod
