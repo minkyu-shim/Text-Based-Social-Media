@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Media API — Developer Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e11;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2a35;
+    --border2: #3a3a48;
+    --text: #e8e8f0;
+    --muted: #7a7a90;
+    --dim: #4a4a60;
+    --mongo: #00ed64;
+    --mongo-bg: rgba(0,237,100,0.08);
+    --mongo-border: rgba(0,237,100,0.2);
+    --neo4j: #4a8cff;
+    --neo4j-bg: rgba(74,140,255,0.08);
+    --neo4j-border: rgba(74,140,255,0.2);
+    --redis: #ff6b35;
+    --redis-bg: rgba(255,107,53,0.08);
+    --redis-border: rgba(255,107,53,0.2);
+    --service: #a78bfa;
+    --service-bg: rgba(167,139,250,0.08);
+    --service-border: rgba(167,139,250,0.2);
+    --accent: #a78bfa;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  html { background: var(--bg); color: var(--text); font-family: var(--font-sans); font-size: 14px; line-height: 1.6; }
+
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+
+  header {
+    padding: 32px 40px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  header h1 {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .header-chips {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .db-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .db-badge.mongo { background: var(--mongo-bg); border: 1px solid var(--mongo-border); color: var(--mongo); }
+  .db-badge.neo4j { background: var(--neo4j-bg); border: 1px solid var(--neo4j-border); color: var(--neo4j); }
+  .db-badge.redis { background: var(--redis-bg); border: 1px solid var(--redis-border); color: var(--redis); }
+  .db-badge.svc   { background: var(--service-bg); border: 1px solid var(--service-border); color: var(--service); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  nav {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    overflow-y: auto;
+    padding: 20px 0 40px;
+  }
+
+  .nav-section {
+    padding: 0 16px;
+  }
+  .nav-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: 16px 8px 6px;
+    display: block;
+  }
+  .nav-label:first-child { padding-top: 4px; }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s, color .12s;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--surface2); color: var(--text); border-left: 2px solid var(--accent); padding-left: 8px; }
+  .nav-btn svg { width: 14px; height: 14px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  main {
+    overflow-y: auto;
+    padding: 32px 40px 60px;
+    max-width: 760px;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: 10px;
+    color: var(--dim);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .empty-state svg { width: 32px; height: 32px; stroke: var(--dim); fill: none; stroke-width: 1.5; opacity: .5; }
+
+  .action-title {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .action-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .steps { display: flex; flex-direction: column; gap: 2px; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 14px 16px 14px 0;
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn .2s ease both;
+  }
+  .step:last-child { border-bottom: none; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-body {}
+  .step-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .chip.mongo   { background: var(--mongo-bg);   border: 1px solid var(--mongo-border);   color: var(--mongo);   }
+  .chip.neo4j   { background: var(--neo4j-bg);   border: 1px solid var(--neo4j-border);   color: var(--neo4j);   }
+  .chip.redis   { background: var(--redis-bg);   border: 1px solid var(--redis-border);   color: var(--redis);   }
+  .chip.service { background: var(--service-bg); border: 1px solid var(--service-border); color: var(--service); }
+
+  .step-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .step-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+
+
+  .sample-section {
+    margin-top: 32px;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+  .sample-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .sample-block { margin-bottom: 16px; }
+  .sample-method {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .method-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .method-pill.get    { background: rgba(74,140,255,0.15); color: #4a8cff; }
+  .method-pill.post   { background: rgba(0,237,100,0.12);  color: #00ed64; }
+  .method-pill.patch  { background: rgba(255,199,53,0.12);  color: #ffc735; }
+  .method-pill.delete { background: rgba(255,80,80,0.12);   color: #ff5050; }
+  .sample-url {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+  }
+  .copy-btn {
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .12s, border-color .12s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--mongo); border-color: var(--mongo-border); }
+  .sample-note { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
+  pre.sample-json {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    overflow-x: auto;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .json-key  { color: #7dd3fc; }
+  .json-str  { color: #86efac; }
+  .json-num  { color: #fbbf24; }
+  .json-note { color: var(--dim); font-style: italic; }
+  ::-webkit-scrollbar { width: 4px; }
+
+  .sample-section {
+    margin-top: 32px;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+  .sample-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .sample-block { margin-bottom: 16px; }
+  .sample-method {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .method-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .method-pill.get    { background: rgba(74,140,255,0.15); color: #4a8cff; }
+  .method-pill.post   { background: rgba(0,237,100,0.12);  color: #00ed64; }
+  .method-pill.patch  { background: rgba(255,199,53,0.12);  color: #ffc735; }
+  .method-pill.delete { background: rgba(255,80,80,0.12);   color: #ff5050; }
+  .sample-url {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+  }
+  .copy-btn {
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .12s, border-color .12s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--mongo); border-color: var(--mongo-border); }
+  .sample-note { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
+  pre.sample-json {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    overflow-x: auto;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .json-key  { color: #7dd3fc; }
+  .json-str  { color: #86efac; }
+  .json-num  { color: #fbbf24; }
+  .json-note { color: var(--dim); font-style: italic; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  .sample-section {
+    margin-top: 32px;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+  .sample-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .sample-block { margin-bottom: 16px; }
+  .sample-method {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .method-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .method-pill.get    { background: rgba(74,140,255,0.15); color: #4a8cff; }
+  .method-pill.post   { background: rgba(0,237,100,0.12);  color: #00ed64; }
+  .method-pill.patch  { background: rgba(255,199,53,0.12);  color: #ffc735; }
+  .method-pill.delete { background: rgba(255,80,80,0.12);   color: #ff5050; }
+  .sample-url {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+  }
+  .copy-btn {
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .12s, border-color .12s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--mongo); border-color: var(--mongo-border); }
+  .sample-note { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
+  pre.sample-json {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    overflow-x: auto;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .json-key  { color: #7dd3fc; }
+  .json-str  { color: #86efac; }
+  .json-num  { color: #fbbf24; }
+  .json-note { color: var(--dim); font-style: italic; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>social-media / api reference</h1>
+  <p>Select an action to trace every component it touches</p>
+  <div class="header-chips">
+    <span class="db-badge mongo">● MongoDB</span>
+    <span class="db-badge neo4j">● Neo4j</span>
+    <span class="db-badge redis">● Redis</span>
+    <span class="db-badge svc">● Service layer</span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav>
+    <div class="nav-section">
+      <span class="nav-label">Identity</span>
+      <button class="nav-btn" onclick="show('register')">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Register
+      </button>
+      <button class="nav-btn" onclick="show('login')">
+        <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Login
+      </button>
+      <button class="nav-btn" onclick="show('logout')">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+
+      <span class="nav-label">Profile</span>
+      <button class="nav-btn" onclick="show('view_profile')">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        View profile
+      </button>
+      <button class="nav-btn" onclick="show('edit_profile')">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit profile
+      </button>
+
+      <span class="nav-label">Social</span>
+      <button class="nav-btn" onclick="show('follow')">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+        Follow user
+      </button>
+      <button class="nav-btn" onclick="show('unfollow')">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Unfollow user
+      </button>
+      <button class="nav-btn" onclick="show('block')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        Block user
+      </button>
+      <button class="nav-btn" onclick="show('close_friend')">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Close friend
+      </button>
+      <button class="nav-btn" onclick="show('hop')">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="12" cy="5" r="2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="12" y1="7" x2="5" y2="11"/><line x1="12" y1="7" x2="19" y2="11"/></svg>
+        Hop distance
+      </button>
+
+      <span class="nav-label">Posts</span>
+      <button class="nav-btn" onclick="show('create_post')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create post
+      </button>
+      <button class="nav-btn" onclick="show('like_post')">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Like post
+      </button>
+      <button class="nav-btn" onclick="show('delete_post')">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Delete post
+      </button>
+
+      <span class="nav-label">Feed</span>
+      <button class="nav-btn" onclick="show('home_feed')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home feed
+      </button>
+      <button class="nav-btn" onclick="show('search')">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Search posts
+      </button>
+      <button class="nav-btn" onclick="show('recommendations')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Recommendations
+      </button>
+    </div>
+  </nav>
+
+  <main id="main-panel">
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      select an action
+    </div>
+  </main>
+</div>
+
+<script>
+const actions = {
+  register:{title:"register",desc:"Creates a new user account. Writes to both MongoDB (user document) and Neo4j (user graph node), then returns a JWT.",steps:[
+    {n:1,chips:["service"],label:"auth_service.register_user()",sub:"Validates input, hashes password with bcrypt"},
+    {n:2,chips:["mongo"],label:"AuthQueries.create_user()",sub:"Inserts user doc into users collection"},
+    {n:3,chips:["neo4j"],label:"AuthQueries.create_user_node()",sub:"Creates User node in graph with id, username, email"},
+    {n:4,chips:["service"],label:"Returns JWT access token",sub:"Token issued immediately — no separate login step needed"},
+  ]},
+  login:{title:"login",desc:"Authenticates an existing user by email and password, returns a JWT.",steps:[
+    {n:1,chips:["service"],label:"auth_service.verify_credentials()",sub:""},
+    {n:2,chips:["mongo"],label:"AuthQueries.find_user_by_email()",sub:"MongoDB query on users collection"},
+    {n:3,chips:["service"],label:"bcrypt.checkpw(password, hash)",sub:"Password verified locally — never stored in plaintext"},
+    {n:4,chips:["service"],label:"Returns JWT access token",sub:"Signed with JWT_SECRET_KEY from .env"},
+  ]},
+  logout:{title:"logout",desc:"Invalidates the current JWT so it cannot be reused, even before it expires.",steps:[
+    {n:1,chips:["service"],label:"auth_service.blocklist_token()",sub:"Extracts JTI (unique token ID) from bearer token"},
+    {n:2,chips:["redis"],label:"AuthQueries.blocklist_token(jti, ttl)",sub:"SET blocklist:{jti} = 1 with TTL matching token expiry"},
+    {n:3,chips:["redis"],label:"All future requests rejected",sub:"token_in_blocklist_loader checks Redis on every protected route"},
+  ]},
+  view_profile:{title:"view profile",desc:"Returns a user's public profile fields.",steps:[
+    {n:1,chips:["service"],label:"user_service.get_profile(user_id)",sub:"JWT validated, identity extracted"},
+    {n:2,chips:["mongo"],label:"UserQueries.get_by_id()",sub:"find_one by ObjectId in users collection"},
+    {n:3,chips:["service"],label:"Returns serialised UserResponse",sub:"id, username, email, bio, first_name, last_name"},
+  ]},
+  edit_profile:{title:"edit profile",desc:"Updates allowed profile fields. Username and email cannot be changed via this endpoint.",steps:[
+    {n:1,chips:["service"],label:"user_service.update_profile(updates)",sub:"Filters to allowed fields: bio, first_name, last_name"},
+    {n:2,chips:["service"],label:"Raises 400 if no valid fields",sub:"Prevents empty update calls"},
+    {n:3,chips:["mongo"],label:"UserQueries.update()",sub:"find_one_and_update with $set, returns updated doc"},
+  ]},
+  follow:{title:"follow user",desc:"Creates a directional FOLLOWS relationship in Neo4j. Immediately affects home feed and recommendations.",steps:[
+    {n:1,chips:["service"],label:"user_service.follow(follower_id, target_id)",sub:""},
+    {n:2,chips:["neo4j"],label:"UserQueries.follow()",sub:"MERGE (a:User)-[:FOLLOWS]->(b:User)"},
+    {n:3,chips:["neo4j"],label:"Graph updated instantly",sub:"Home feed and friend-of-friend recs now include this user"},
+  ]},
+  unfollow:{title:"unfollow user",desc:"Removes the FOLLOWS relationship.",steps:[
+    {n:1,chips:["service"],label:"user_service.unfollow(follower_id, target_id)",sub:""},
+    {n:2,chips:["neo4j"],label:"UserQueries.unfollow()",sub:"MATCH (a)-[r:FOLLOWS]->(b) DELETE r"},
+  ]},
+  block:{title:"block user",desc:"Creates a BLOCKS relationship and removes all FOLLOWS edges between both users.",steps:[
+    {n:1,chips:["service"],label:"user_service.block(blocker_id, target_id)",sub:""},
+    {n:2,chips:["neo4j"],label:"UserQueries.block()",sub:"MERGE (a)-[:BLOCKS]->(b)"},
+    {n:3,chips:["neo4j"],label:"Removes existing follows",sub:"OPTIONAL MATCH deletes :FOLLOWS in both directions atomically"},
+  ]},
+  close_friend:{title:"add close friend",desc:"Creates a CLOSE_FRIENDS relationship — a separate graph edge from FOLLOWS.",steps:[
+    {n:1,chips:["service"],label:"user_service.add_close_friend(user_id, target_id)",sub:""},
+    {n:2,chips:["neo4j"],label:"UserQueries.add_close_friend()",sub:"MERGE (a)-[:CLOSE_FRIENDS]->(b)"},
+  ]},
+  hop:{title:"hop distance",desc:"Returns the shortest path length between two users in the follow graph.",steps:[
+    {n:1,chips:["service"],label:"user_service.hop_distance(user_id, target_id)",sub:"Short-circuits with distance=0 if IDs match"},
+    {n:2,chips:["neo4j"],label:"UserQueries.hop_distance()",sub:"shortestPath((a)-[:FOLLOWS*]-(b)) — undirected, any depth"},
+    {n:3,chips:["service"],label:"Returns {distance, connected}",sub:"connected: false if no path exists"},
+  ]},
+  create_post:{title:"create post",desc:"Inserts a new post into MongoDB. Atlas Search indexes it asynchronously.",steps:[
+    {n:1,chips:["service"],label:"post_service.create_post(author_id, content)",sub:"Builds PostResponse model with timestamp"},
+    {n:2,chips:["mongo"],label:"PostQueries.create_post()",sub:"insert_one into posts collection"},
+    {n:3,chips:["mongo"],label:"Atlas Search indexes document",sub:"posts_search index picks up new content — allow ~15s for search"},
+    {n:4,chips:["service"],label:"Returns {id, author_id, content, likes_count}",sub:""},
+  ]},
+  like_post:{title:"like post",desc:"Records the like in both Neo4j (for graph traversal) and MongoDB (for count display).",steps:[
+    {n:1,chips:["service"],label:"post_service.like_post(user_id, post_id)",sub:""},
+    {n:2,chips:["neo4j"],label:"Neo4jQueries.is_liked()",sub:"EXISTS (:User)-[:LIKED]->(:Post) — returns 400 if already liked"},
+    {n:3,chips:["neo4j"],label:"Neo4jQueries.like_post()",sub:"MERGE (u)-[:LIKED]->(p)"},
+    {n:4,chips:["mongo"],label:"PostQueries.like_post()",sub:"$inc likes_count +1 on post document"},
+  ]},
+  delete_post:{title:"delete post",desc:"Deletes a post. Only the author can delete their own posts — returns 403 otherwise.",steps:[
+    {n:1,chips:["service"],label:"post_service.delete_post(post_id, requester_id)",sub:""},
+    {n:2,chips:["mongo"],label:"PostQueries.get_post_by_id()",sub:"Fetches post to verify author_id"},
+    {n:3,chips:["service"],label:"Ownership check",sub:"Raises ValueError (403) if requester != author"},
+    {n:4,chips:["mongo"],label:"PostQueries.delete_post_by_id()",sub:"delete_one by ObjectId"},
+  ]},
+  home_feed:{title:"home feed",desc:"Returns recent posts from users the current user follows, sorted newest first.",steps:[
+    {n:1,chips:["service"],label:"feed_service.get_home_feed(user_id)",sub:"Returns [] if user follows nobody"},
+    {n:2,chips:["neo4j"],label:"Neo4jQueries.get_following_ids()",sub:"MATCH (u)-[:FOLLOWS]->(f) RETURN f.id"},
+    {n:3,chips:["mongo"],label:"PostQueries.get_posts_by_user_ids()",sub:"$in query on author_id, sorted by timestamp desc, limit 20"},
+  ]},
+  search:{title:"search posts",desc:"Full-text search over post content using Atlas Search ($search pipeline #1).",steps:[
+    {n:1,chips:["service"],label:"feed_service.search_posts(query)",sub:"Validates query is non-empty"},
+    {n:2,chips:["mongo"],label:"PostQueries.search_posts()",sub:"Atlas Search $search pipeline on posts_search index"},
+    {n:3,chips:["mongo"],label:"Fuzzy match (maxEdits: 1)",sub:"Tolerates single-character typos"},
+    {n:4,chips:["service"],label:"Returns results ranked by relevance",sub:"Atlas Search relevance score"},
+  ]},
+  recommendations:{title:"recommendations",desc:"Content-aware recommendations: combines Neo4j graph traversal with Atlas Search ($search pipeline #2).",steps:[
+    {n:1,chips:["service"],label:"feed_service.get_recommendations(user_id)",sub:""},
+    {n:2,chips:["neo4j"],label:"Neo4jQueries.get_recommendations()",sub:"FOLLOWS*2 — finds friends-of-friends not yet followed"},
+    {n:3,chips:["neo4j"],label:"Neo4jQueries.get_liked_post_ids()",sub:"Gets post IDs the user has liked for keyword extraction"},
+    {n:4,chips:["mongo"],label:"PostQueries.get_posts_by_ids()",sub:"Fetches liked post content to build keyword string"},
+    {n:5,chips:["mongo"],label:"PostQueries.search_posts_by_users()",sub:"Atlas $search compound: must=keywords + filter=rec_ids"},
+    {n:6,chips:["service"],label:"Fallback: latest-per-user",sub:"Used if user has no likes yet"},
+  ]},
+};
+
+const chipHTML = {
+  mongo:   '<span class="chip mongo">MongoDB</span>',
+  neo4j:   '<span class="chip neo4j">Neo4j</span>',
+  redis:   '<span class="chip redis">Redis</span>',
+  service: '<span class="chip service">service</span>',
+};
+
+
+const samples = {
+  register:{
+    request:{method:"POST",url:"/auth/register",
+      body:{username:"alice",email:"alice@test.com",password:"password123"}},
+    response:{access_token:"eyJhbGci..."}
+  },
+  login:{
+    request:{method:"POST",url:"/auth/login",
+      body:{email:"alice@test.com",password:"password123"}},
+    response:{access_token:"eyJhbGci..."}
+  },
+  logout:{
+    request:{method:"POST",url:"/auth/logout",headers:{"Authorization":"Bearer <token>"}},
+    response:{message:"Logged out successfully"}
+  },
+  view_profile:{
+    request:{method:"GET",url:"/users/me",headers:{"Authorization":"Bearer <token>"}},
+    response:{id:"64f1a2b3c4d5e6f7a8b9c0d1",username:"alice",email:"alice@test.com",bio:"Hello I am Alice",first_name:"Alice",last_name:"Smith"}
+  },
+  edit_profile:{
+    request:{method:"PATCH",url:"/users/me",headers:{"Authorization":"Bearer <token>"},
+      body:{bio:"Updated bio",first_name:"Alice",last_name:"Smith"}},
+    response:{id:"64f1a2b3c4d5e6f7a8b9c0d1",username:"alice",bio:"Updated bio"}
+  },
+  follow:{
+    request:{method:"POST",url:"/users/<user_id>/follow",headers:{"Authorization":"Bearer <token>"},
+      note:"Replace <user_id> with target user's MongoDB ObjectId"},
+    response:{message:"Followed successfully"}
+  },
+  unfollow:{
+    request:{method:"DELETE",url:"/users/<user_id>/follow",headers:{"Authorization":"Bearer <token>"}},
+    response:{message:"Unfollowed successfully"}
+  },
+  block:{
+    request:{method:"POST",url:"/users/<user_id>/block",headers:{"Authorization":"Bearer <token>"}},
+    response:{message:"User blocked"}
+  },
+  close_friend:{
+    request:{method:"POST",url:"/users/<user_id>/close-friends",headers:{"Authorization":"Bearer <token>"}},
+    response:{message:"Added to close friends"}
+  },
+  hop:{
+    request:{method:"GET",url:"/users/<user_id>/distance/<target_id>",headers:{"Authorization":"Bearer <token>"},
+      note:"Both IDs are MongoDB ObjectIds"},
+    response:{distance:2,connected:true}
+  },
+  create_post:{
+    request:{method:"POST",url:"/posts/",headers:{"Authorization":"Bearer <token>"},
+      body:{content:"Hello world, this is my first post about python coding!"}},
+    response:{id:"64f1a2b3c4d5e6f7a8b9c0d2",author_id:"64f1a2b3c4d5e6f7a8b9c0d1",content:"Hello world, this is my first post about python coding!",likes_count:0}
+  },
+  like_post:{
+    request:{method:"POST",url:"/posts/<post_id>/like",headers:{"Authorization":"Bearer <token>"},
+      note:"Replace <post_id> with a MongoDB ObjectId from create post response"},
+    response:{message:"Post liked"}
+  },
+  delete_post:{
+    request:{method:"DELETE",url:"/posts/<post_id>",headers:{"Authorization":"Bearer <token>"},
+      note:"Only the post author can delete. Returns 403 for other users"},
+    response:{message:"Post deleted"}
+  },
+  home_feed:{
+    request:{method:"GET",url:"/feed/?limit=20",headers:{"Authorization":"Bearer <token>"},
+      note:"Follow at least one user first, otherwise returns empty list"},
+    response:{posts:[{id:"64f...",author_id:"64f...",content:"...",likes_count:3}],count:1}
+  },
+  search:{
+    request:{method:"GET",url:"/feed/search?q=python",headers:{"Authorization":"Bearer <token>"},
+      note:"Wait ~15s after creating posts for Atlas Search to index them"},
+    response:{posts:[{id:"64f...",content:"Hello world, this is my first post about python coding!"}],count:1,query:"python"}
+  },
+  recommendations:{
+    request:{method:"GET",url:"/feed/recommendations",headers:{"Authorization":"Bearer <token>"},
+      note:"Requires: you follow user A, user A follows user B, user B has posts"},
+    response:{posts:[{id:"64f...",author_id:"<friend-of-friend-id>",content:"..."}],count:1}
+  },
+};
+
+function jsonHL(obj, indent) {
+  indent = indent || 0;
+  const pad = '  '.repeat(indent);
+  const pad1 = '  '.repeat(indent + 1);
+  if (obj === null) return 'null';
+  if (typeof obj === 'boolean') return String(obj);
+  if (typeof obj === 'number') return `<span class="json-num">${obj}</span>`;
+  if (typeof obj === 'string') return `<span class="json-str">"${obj}"</span>`;
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '[]';
+    const items = obj.map(v => pad1 + jsonHL(v, indent + 1));
+    return '[\n' + items.join(',\n') + '\n' + pad + ']';
+  }
+  const keys = Object.keys(obj);
+  if (keys.length === 0) return '{}';
+  const lines = keys.map(k => {
+    const val = obj[k];
+    return pad1 + `<span class="json-key">"${k}"</span>: ` + jsonHL(val, indent + 1);
+  });
+  return '{\n' + lines.join(',\n') + '\n' + pad + '}';
+}
+
+function sampleHTML(key) {
+  const s = samples[key];
+  if (!s) return '';
+  const req = s.request;
+  const methodClass = req.method.toLowerCase();
+  const note = req.note ? `<div class="sample-note">${req.note}</div>` : '';
+
+  const reqObj = {};
+  if (req.headers) Object.assign(reqObj, {headers: req.headers});
+  if (req.body) Object.assign(reqObj, {body: req.body});
+
+  const hasReqBody = Object.keys(reqObj).length > 0;
+
+  let html = `<div class="sample-section">
+    <span class="sample-label">data sample</span>
+    <div class="sample-block">
+      <div class="sample-method">
+        <span class="method-pill ${methodClass}">${req.method}</span>
+        <span class="sample-url">${req.url}</span>
+        <button class="copy-btn" onclick="copyJSON(this, ${JSON.stringify(JSON.stringify(reqObj))})">copy</button>
+      </div>
+      ${note}`;
+
+  if (hasReqBody) {
+    html += `<pre class="sample-json">${jsonHL(reqObj)}</pre>`;
+  }
+
+  html += `</div>
+    <div class="sample-block">
+      <div class="sample-method">
+        <span class="method-pill get" style="background:rgba(167,139,250,0.12);color:#a78bfa">RES</span>
+        <span class="sample-url">example response</span>
+        <button class="copy-btn" onclick="copyJSON(this, ${JSON.stringify(JSON.stringify(s.response))})">copy</button>
+      </div>
+      <pre class="sample-json">${jsonHL(s.response)}</pre>
+    </div>
+  </div>`;
+  return html;
+}
+
+function copyJSON(btn, raw) {
+  navigator.clipboard.writeText(raw).then(() => {
+    btn.textContent = 'copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function show(key) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const a = actions[key];
+  const stepsHTML = a.steps.map((s, i) =>
+    `<div class="step" style="animation-delay:${i * 40}ms">
+      <div class="step-num">${s.n}</div>
+      <div class="step-body">
+        <div class="step-chips">${s.chips.map(c => chipHTML[c]).join('')}</div>
+        <div class="step-label">${s.label}</div>
+        ${s.sub ? `<div class="step-sub">${s.sub}</div>` : ''}
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('main-panel').innerHTML = `
+    <div class="action-title">${a.title}</div>
+    <div class="action-desc">${a.desc}</div>
+    <div class="steps">${stepsHTML}</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--mongo)"></div>MongoDB — documents</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--neo4j)"></div>Neo4j — graph</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--redis)"></div>Redis — cache</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--service)"></div>Service layer</div>
+    </div>
+    ${sampleHTML(key)}`;
+}
+
+</script>
+</body>
+</html>
