@@ -1,6 +1,9 @@
+import json
 from app.db.mongo import get_db
 from app.db.neo4j import get_session
 from app.db.redis import get_redis
+
+SESSION_TTL_SECONDS = 30 * 24 * 60 * 60  # 30 days
 
 
 class AuthQueries:
@@ -40,3 +43,36 @@ class AuthQueries:
     def is_token_blocked(jti: str) -> bool:
         r = get_redis()
         return r.exists(f"blocklist:{jti}") > 0
+
+    @staticmethod
+    def create_session(session_id: str, user_id: str) -> None:
+        r = get_redis()
+        r.set(
+            f"session:{session_id}",
+            json.dumps({"user_id": user_id}),
+            ex=SESSION_TTL_SECONDS,
+        )
+        r.sadd(f"user_sessions:{user_id}", session_id)
+        r.expire(f"user_sessions:{user_id}", SESSION_TTL_SECONDS)
+
+    @staticmethod
+    def get_session(session_id: str) -> dict | None:
+        r = get_redis()
+        data = r.get(f"session:{session_id}")
+        if not data:
+            return None
+        return json.loads(data)
+
+    @staticmethod
+    def delete_session(session_id: str, user_id: str) -> None:
+        r = get_redis()
+        r.delete(f"session:{session_id}")
+        r.srem(f"user_sessions:{user_id}", session_id)
+
+    @staticmethod
+    def delete_all_sessions(user_id: str) -> None:
+        r = get_redis()
+        session_ids = r.smembers(f"user_sessions:{user_id}")
+        if session_ids:
+            r.delete(*[f"session:{sid}" for sid in session_ids])
+        r.delete(f"user_sessions:{user_id}")

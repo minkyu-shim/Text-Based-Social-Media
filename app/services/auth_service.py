@@ -1,3 +1,4 @@
+import secrets
 from flask_bcrypt import Bcrypt
 from app.queries.queries_interface import Queries
 
@@ -25,3 +26,21 @@ def blocklist_token(jti: str, ttl_seconds: int):
 
 def is_token_blocked(jti: str) -> bool:
     return Queries.auth.is_token_blocked(jti)
+
+
+def create_session(user_id: str) -> str:
+    session_id = secrets.token_urlsafe(32)
+    Queries.auth.create_session(session_id, user_id)
+    return session_id
+
+
+def get_session(session_id: str) -> dict | None:
+    return Queries.auth.get_session(session_id)
+
+
+def delete_session(session_id: str, user_id: str) -> None:
+    Queries.auth.delete_session(session_id, user_id)
+
+
+def delete_all_sessions(user_id: str) -> None:
+    Queries.auth.delete_all_sessions(user_id)
