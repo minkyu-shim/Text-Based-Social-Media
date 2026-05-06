@@ -1,5 +1,6 @@
 from app.queries.queries_interface import Queries
 from app.models.post import PostResponse
+from app.services.notification_service import send_notification
 from datetime import datetime
 
 
@@ -58,6 +59,8 @@ def like_post(user_id: str, post_id: str):
             raise ValueError("Post already liked")
         Queries.neo4j.like_post(user_id, post_id)
         Queries.posts.like_post(post_id)
+        post = Queries.posts.get_post_by_id(post_id)
+        send_notification(post["author_id"], "like", user_id, post_id)
     except ValueError:
         raise
     except Exception as e:
