@@ -80,6 +80,48 @@ class PostQueries:
         posts = list(db.posts.aggregate(pipeline))
         return [_serialize(p) for p in posts]
 
+
+    @staticmethod
+    def get_posts_by_ids(post_ids: list) -> list:
+
+        db = get_db()
+        try:
+            object_ids = [ObjectId(pid) for pid in post_ids if pid]
+            posts = list(db.posts.find({"_id": {"$in": object_ids}}))
+            return [_serialize(p) for p in posts]
+        except Exception:
+            return []
+    
+
+    @staticmethod
+    def search_posts_by_users(user_ids: list, keywords: str, limit: int = 20) -> list:
+
+        db = get_db()
+        pipeline = [
+            {"": {
+                "index": "posts_search",
+                "compound": {
+                    "must": [{
+                        "text": {
+                            "query": keywords,
+                            "path": "content",
+                            "fuzzy": {"maxEdits": 1}
+                        }
+                    }],
+                    "filter": [{
+                        "in": {
+                            "path": "author_id",
+                            "value": user_ids
+                        }
+                    }]
+                }
+            }},
+            {"": limit},
+            {"": {"id": {"": ""}}},
+            {"": {"_id": 0}}
+        ]
+        return list(db.posts.aggregate(pipeline))
+
     @staticmethod
     def create_post(post: PostResponse):
         db = get_db()

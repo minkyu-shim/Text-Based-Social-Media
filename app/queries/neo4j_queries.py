@@ -2,31 +2,7 @@ from app.db.neo4j import get_driver, get_session
 
 class Neo4jQueries:
     
-    # def create_user(self, user_id: str):
-    #     with get_session() as s:
-            
-    #         s.run("MERGE (u:User {id: $id})", id=user_id)
-
-
-    def follow_user(self, follower_id: str, following_id: str):
-        with get_session() as s:
-            
-            s.run(
-                "MERGE (a:User {id: $follower}) "
-                "MERGE (b:User {id: $following}) "
-                "MERGE (a)-[:FOLLOWS]->(b)",
-                follower=follower_id, following=following_id)
-
-
-    def unfollow_user(self, follower_id: str, following_id: str):
-        with get_session() as s:
-            
-            s.run(
-                "MATCH (a:User {id: $follower})-[r:FOLLOWS]->(b:User {id: $following}) "
-                "DELETE r",
-                follower=follower_id, following=following_id)
-
-
+    
     def get_following_ids(self, user_id: str) -> list[str]:
         with get_session() as s:
             

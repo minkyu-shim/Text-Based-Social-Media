@@ -51,6 +51,13 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+  
+  docs:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docs:/usr/share/nginx/html:ro
 
 volumes:
   mongo_data:
