@@ -20,6 +20,7 @@ services:
 
   mongodb:
     image: mongodb/mongodb-atlas-local
+    hostname: mongodb
     ports:
       - "27017:27017"
     volumes:
