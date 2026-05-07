@@ -282,20 +282,6 @@
     color: var(--muted);
     flex: 1;
   }
-  .copy-btn {
-    flex-shrink: 0;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: color .12s, border-color .12s;
-  }
-  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
-  .copy-btn.copied { color: var(--mongo); border-color: var(--mongo-border); }
   .sample-note { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
   pre.sample-json {
     background: var(--surface2);
@@ -356,20 +342,6 @@
     color: var(--muted);
     flex: 1;
   }
-  .copy-btn {
-    flex-shrink: 0;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: color .12s, border-color .12s;
-  }
-  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
-  .copy-btn.copied { color: var(--mongo); border-color: var(--mongo-border); }
   .sample-note { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
   pre.sample-json {
     background: var(--surface2);
@@ -430,20 +402,6 @@
     color: var(--muted);
     flex: 1;
   }
-  .copy-btn {
-    flex-shrink: 0;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: color .12s, border-color .12s;
-  }
-  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
-  .copy-btn.copied { color: var(--mongo); border-color: var(--mongo-border); }
   .sample-note { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
   pre.sample-json {
     background: var(--surface2);
@@ -492,6 +450,14 @@
       <button class="nav-btn" onclick="show('logout')">
         <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Logout
+      </button>
+      <button class="nav-btn" onclick="show('refresh')">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh token
+      </button>
+      <button class="nav-btn" onclick="show('logout_all')">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
+        Logout all
       </button>
 
       <span class="nav-label">Profile</span>
@@ -553,6 +519,12 @@
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
         Recommendations
       </button>
+
+      <span class="nav-label">Notifications</span>
+      <button class="nav-btn" onclick="show('notifications')">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Get notifications
+      </button>
     </div>
   </nav>
 
@@ -566,92 +538,131 @@
 
 <script>
 const actions = {
-  register:{title:"register",desc:"Creates a new user account. Writes to both MongoDB (user document) and Neo4j (user graph node), then returns a JWT.",steps:[
+  refresh:{title:"refresh token",desc:"Issues a new access token using a valid refresh token (Redis session). No password needed.",steps:[
+    {n:1,chips:["service"],label:"POST /auth/refresh with {refresh_token}",sub:""},
+    {n:2,chips:["redis"],label:"AuthQueries.get_session(session_id)",sub:"GET session:{id} — returns null if expired or deleted"},
+    {n:3,chips:["service"],label:"Issues new access_token",sub:"Refresh token (session) remains valid for 30 days"},
+    {n:4,chips:["service"],label:"Returns {access_token}",sub:"Use this new token for all subsequent requests"},
+  ]},
+  logout_all:{title:"logout all devices",desc:"Blocklists current access token and deletes ALL Redis sessions for this user.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["redis"],label:"AuthQueries.blocklist_token(jti, ttl)",sub:"SET blocklist:{jti} = 1"},
+    {n:3,chips:["redis"],label:"AuthQueries.delete_all_sessions(user_id)",sub:"SMEMBERS user_sessions:{user_id} → DEL each session:{id} → DEL user_sessions:{user_id}"},
+    {n:4,chips:["service"],label:"All devices logged out",sub:"Every refresh token for this user is now invalid"},
+  ]},
+  register:{title:"register",desc:"Creates a new user account. Writes to MongoDB (user doc), Neo4j (graph node), and Redis (session). Returns access + refresh tokens.",steps:[
     {n:1,chips:["service"],label:"auth_service.register_user()",sub:"Validates input, hashes password with bcrypt"},
     {n:2,chips:["mongo"],label:"AuthQueries.create_user()",sub:"Inserts user doc into users collection"},
     {n:3,chips:["neo4j"],label:"AuthQueries.create_user_node()",sub:"Creates User node in graph with id, username, email"},
-    {n:4,chips:["service"],label:"Returns JWT access token",sub:"Token issued immediately — no separate login step needed"},
+    {n:4,chips:["redis"],label:"AuthQueries.create_session(session_id, user_id)",sub:"SET session:{id} = {user_id} with 30-day TTL; SADD user_sessions:{user_id}"},
+    {n:5,chips:["service"],label:"Returns access_token + refresh_token",sub:"access token is short-lived JWT; refresh token is the Redis session key"},
   ]},
-  login:{title:"login",desc:"Authenticates an existing user by email and password, returns a JWT.",steps:[
-    {n:1,chips:["service"],label:"auth_service.verify_credentials()",sub:""},
-    {n:2,chips:["mongo"],label:"AuthQueries.find_user_by_email()",sub:"MongoDB query on users collection"},
+  login:{title:"login",desc:"Authenticates an existing user, creates a new Redis session, returns access + refresh tokens.",steps:[
+    {n:1,chips:["service"],label:"auth_service.verify_credentials(email, password)",sub:""},
+    {n:2,chips:["mongo"],label:"AuthQueries.find_user_by_email()",sub:"find_one on users collection by email"},
     {n:3,chips:["service"],label:"bcrypt.checkpw(password, hash)",sub:"Password verified locally — never stored in plaintext"},
-    {n:4,chips:["service"],label:"Returns JWT access token",sub:"Signed with JWT_SECRET_KEY from .env"},
+    {n:4,chips:["redis"],label:"AuthQueries.create_session(session_id, user_id)",sub:"SET session:{id} with 30-day TTL; SADD user_sessions:{user_id}"},
+    {n:5,chips:["service"],label:"Returns access_token + refresh_token",sub:""},
   ]},
-  logout:{title:"logout",desc:"Invalidates the current JWT so it cannot be reused, even before it expires.",steps:[
-    {n:1,chips:["service"],label:"auth_service.blocklist_token()",sub:"Extracts JTI (unique token ID) from bearer token"},
-    {n:2,chips:["redis"],label:"AuthQueries.blocklist_token(jti, ttl)",sub:"SET blocklist:{jti} = 1 with TTL matching token expiry"},
-    {n:3,chips:["redis"],label:"All future requests rejected",sub:"token_in_blocklist_loader checks Redis on every protected route"},
+  logout:{title:"logout",desc:"Blocklists the access token in Redis and deletes the refresh session.",steps:[
+    {n:1,chips:["service"],label:"blocklist_token(jti, ttl)",sub:"Extracts JTI from bearer token, computes remaining TTL"},
+    {n:2,chips:["redis"],label:"AuthQueries.blocklist_token(jti, ttl)",sub:"SET blocklist:{jti} = 1 with TTL — token rejected on all future requests"},
+    {n:3,chips:["redis"],label:"AuthQueries.delete_session(session_id, user_id)",sub:"DEL session:{id}; SREM user_sessions:{user_id}"},
+    {n:4,chips:["redis"],label:"token_in_blocklist_loader",sub:"Checks Redis on every protected route — blocked tokens get 401"},
   ]},
-  view_profile:{title:"view profile",desc:"Returns a user's public profile fields.",steps:[
-    {n:1,chips:["service"],label:"user_service.get_profile(user_id)",sub:"JWT validated, identity extracted"},
-    {n:2,chips:["mongo"],label:"UserQueries.get_by_id()",sub:"find_one by ObjectId in users collection"},
-    {n:3,chips:["service"],label:"Returns serialised UserResponse",sub:"id, username, email, bio, first_name, last_name"},
+  view_profile:{title:"view profile",desc:"Returns a user's public profile. Every protected route first validates the JWT against Redis blocklist.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti} — rejects logged-out tokens before route runs"},
+    {n:2,chips:["service"],label:"user_service.get_profile(user_id)",sub:"Validates ObjectId format"},
+    {n:3,chips:["mongo"],label:"UserQueries.get_by_id()",sub:"find_one by ObjectId in users collection"},
+    {n:4,chips:["service"],label:"Returns serialised UserResponse",sub:"id, username, email, bio, first_name, last_name"},
   ]},
-  edit_profile:{title:"edit profile",desc:"Updates allowed profile fields. Username and email cannot be changed via this endpoint.",steps:[
-    {n:1,chips:["service"],label:"user_service.update_profile(updates)",sub:"Filters to allowed fields: bio, first_name, last_name"},
-    {n:2,chips:["service"],label:"Raises 400 if no valid fields",sub:"Prevents empty update calls"},
+  edit_profile:{title:"edit profile",desc:"Updates allowed profile fields. Every protected route first validates JWT against Redis blocklist.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"user_service.update_profile(updates)",sub:"Filters to allowed fields: bio, first_name, last_name. Raises 400 if empty"},
     {n:3,chips:["mongo"],label:"UserQueries.update()",sub:"find_one_and_update with $set, returns updated doc"},
   ]},
-  follow:{title:"follow user",desc:"Creates a directional FOLLOWS relationship in Neo4j. Immediately affects home feed and recommendations.",steps:[
-    {n:1,chips:["service"],label:"user_service.follow(follower_id, target_id)",sub:""},
-    {n:2,chips:["neo4j"],label:"UserQueries.follow()",sub:"MERGE (a:User)-[:FOLLOWS]->(b:User)"},
-    {n:3,chips:["neo4j"],label:"Graph updated instantly",sub:"Home feed and friend-of-friend recs now include this user"},
+  follow:{title:"follow user",desc:"Creates FOLLOWS edge in Neo4j and pushes a 'follow' notification to Redis.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"user_service.follow(follower_id, target_id)",sub:"Guards: self-follow raises 400"},
+    {n:3,chips:["neo4j"],label:"UserQueries.follow()",sub:"MERGE (a:User)-[:FOLLOWS]->(b:User)"},
+    {n:4,chips:["redis"],label:"NotificationQueries.send(target_id, {type:'follow'})",sub:"ZADD inbox:{target_id}; ZREMRANGEBYRANK trims to 50; PUBLISH notifications:{target_id}"},
   ]},
-  unfollow:{title:"unfollow user",desc:"Removes the FOLLOWS relationship.",steps:[
-    {n:1,chips:["service"],label:"user_service.unfollow(follower_id, target_id)",sub:""},
-    {n:2,chips:["neo4j"],label:"UserQueries.unfollow()",sub:"MATCH (a)-[r:FOLLOWS]->(b) DELETE r"},
+  unfollow:{title:"unfollow user",desc:"Removes the FOLLOWS relationship from Neo4j.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"user_service.unfollow(follower_id, target_id)",sub:""},
+    {n:3,chips:["neo4j"],label:"UserQueries.unfollow()",sub:"MATCH (a)-[r:FOLLOWS]->(b) DELETE r"},
   ]},
-  block:{title:"block user",desc:"Creates a BLOCKS relationship and removes all FOLLOWS edges between both users.",steps:[
-    {n:1,chips:["service"],label:"user_service.block(blocker_id, target_id)",sub:""},
-    {n:2,chips:["neo4j"],label:"UserQueries.block()",sub:"MERGE (a)-[:BLOCKS]->(b)"},
-    {n:3,chips:["neo4j"],label:"Removes existing follows",sub:"OPTIONAL MATCH deletes :FOLLOWS in both directions atomically"},
+  block:{title:"block user",desc:"Creates BLOCKS edge and removes all FOLLOWS edges in Neo4j.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"user_service.block(blocker_id, target_id)",sub:"Guards: self-block raises 400"},
+    {n:3,chips:["neo4j"],label:"UserQueries.block()",sub:"MERGE (a)-[:BLOCKS]->(b); OPTIONAL MATCH deletes :FOLLOWS both directions"},
   ]},
-  close_friend:{title:"add close friend",desc:"Creates a CLOSE_FRIENDS relationship — a separate graph edge from FOLLOWS.",steps:[
-    {n:1,chips:["service"],label:"user_service.add_close_friend(user_id, target_id)",sub:""},
-    {n:2,chips:["neo4j"],label:"UserQueries.add_close_friend()",sub:"MERGE (a)-[:CLOSE_FRIENDS]->(b)"},
+  close_friend:{title:"add close friend",desc:"Creates CLOSE_FRIENDS edge in Neo4j and pushes a 'close_friend' notification to Redis.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"user_service.add_close_friend(user_id, target_id)",sub:""},
+    {n:3,chips:["neo4j"],label:"UserQueries.add_close_friend()",sub:"MERGE (a)-[:CLOSE_FRIENDS]->(b)"},
+    {n:4,chips:["redis"],label:"NotificationQueries.send(target_id, {type:'close_friend'})",sub:"ZADD inbox:{target_id}; PUBLISH notifications:{target_id}"},
   ]},
-  hop:{title:"hop distance",desc:"Returns the shortest path length between two users in the follow graph.",steps:[
-    {n:1,chips:["service"],label:"user_service.hop_distance(user_id, target_id)",sub:"Short-circuits with distance=0 if IDs match"},
-    {n:2,chips:["neo4j"],label:"UserQueries.hop_distance()",sub:"shortestPath((a)-[:FOLLOWS*]-(b)) — undirected, any depth"},
-    {n:3,chips:["service"],label:"Returns {distance, connected}",sub:"connected: false if no path exists"},
+  hop:{title:"hop distance",desc:"Returns shortest path length between two users in the follow graph.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"user_service.hop_distance(user_id, target_id)",sub:"Short-circuits with distance=0 if IDs match"},
+    {n:3,chips:["neo4j"],label:"UserQueries.hop_distance()",sub:"shortestPath((a)-[:FOLLOWS*]-(b)) — undirected, any depth"},
+    {n:4,chips:["service"],label:"Returns {distance, connected}",sub:"connected: false if no path exists"},
   ]},
   create_post:{title:"create post",desc:"Inserts a new post into MongoDB. Atlas Search indexes it asynchronously.",steps:[
-    {n:1,chips:["service"],label:"post_service.create_post(author_id, content)",sub:"Builds PostResponse model with timestamp"},
-    {n:2,chips:["mongo"],label:"PostQueries.create_post()",sub:"insert_one into posts collection"},
-    {n:3,chips:["mongo"],label:"Atlas Search indexes document",sub:"posts_search index picks up new content — allow ~15s for search"},
-    {n:4,chips:["service"],label:"Returns {id, author_id, content, likes_count}",sub:""},
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"post_service.create_post(author_id, content)",sub:"Builds PostResponse model with timestamp"},
+    {n:3,chips:["mongo"],label:"PostQueries.create_post()",sub:"insert_one into posts collection"},
+    {n:4,chips:["mongo"],label:"Atlas Search indexes document async",sub:"posts_search index picks up new content — allow ~15s"},
   ]},
-  like_post:{title:"like post",desc:"Records the like in both Neo4j (for graph traversal) and MongoDB (for count display).",steps:[
-    {n:1,chips:["service"],label:"post_service.like_post(user_id, post_id)",sub:""},
-    {n:2,chips:["neo4j"],label:"Neo4jQueries.is_liked()",sub:"EXISTS (:User)-[:LIKED]->(:Post) — returns 400 if already liked"},
+  like_post:{title:"like post",desc:"Records like in Neo4j and MongoDB, then pushes a 'like' notification to Redis.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["neo4j"],label:"Neo4jQueries.is_liked()",sub:"EXISTS (:User)-[:LIKED]->(:Post) — raises error if already liked"},
     {n:3,chips:["neo4j"],label:"Neo4jQueries.like_post()",sub:"MERGE (u)-[:LIKED]->(p)"},
     {n:4,chips:["mongo"],label:"PostQueries.like_post()",sub:"$inc likes_count +1 on post document"},
+    {n:5,chips:["redis"],label:"NotificationQueries.send(author_id, {type:'like', post_id})",sub:"ZADD inbox:{author_id}; PUBLISH notifications:{author_id} — skipped if self-like"},
   ]},
-  delete_post:{title:"delete post",desc:"Deletes a post. Only the author can delete their own posts — returns 403 otherwise.",steps:[
-    {n:1,chips:["service"],label:"post_service.delete_post(post_id, requester_id)",sub:""},
+  delete_post:{title:"delete post",desc:"Deletes a post. Only the author can delete — returns 403 otherwise.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
     {n:2,chips:["mongo"],label:"PostQueries.get_post_by_id()",sub:"Fetches post to verify author_id"},
     {n:3,chips:["service"],label:"Ownership check",sub:"Raises ValueError (403) if requester != author"},
     {n:4,chips:["mongo"],label:"PostQueries.delete_post_by_id()",sub:"delete_one by ObjectId"},
   ]},
-  home_feed:{title:"home feed",desc:"Returns recent posts from users the current user follows, sorted newest first.",steps:[
-    {n:1,chips:["service"],label:"feed_service.get_home_feed(user_id)",sub:"Returns [] if user follows nobody"},
-    {n:2,chips:["neo4j"],label:"Neo4jQueries.get_following_ids()",sub:"MATCH (u)-[:FOLLOWS]->(f) RETURN f.id"},
-    {n:3,chips:["mongo"],label:"PostQueries.get_posts_by_user_ids()",sub:"$in query on author_id, sorted by timestamp desc, limit 20"},
+  home_feed:{title:"home feed",desc:"Returns recent posts from followed users. JWT validated against Redis on every request.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"feed_service.get_home_feed(user_id)",sub:"Returns [] if user follows nobody"},
+    {n:3,chips:["neo4j"],label:"Neo4jQueries.get_following_ids()",sub:"MATCH (u)-[:FOLLOWS]->(f) RETURN f.id"},
+    {n:4,chips:["mongo"],label:"PostQueries.get_posts_by_user_ids()",sub:"$in on author_id, sorted by timestamp desc, limit 20"},
   ]},
-  search:{title:"search posts",desc:"Full-text search over post content using Atlas Search ($search pipeline #1).",steps:[
-    {n:1,chips:["service"],label:"feed_service.search_posts(query)",sub:"Validates query is non-empty"},
-    {n:2,chips:["mongo"],label:"PostQueries.search_posts()",sub:"Atlas Search $search pipeline on posts_search index"},
-    {n:3,chips:["mongo"],label:"Fuzzy match (maxEdits: 1)",sub:"Tolerates single-character typos"},
-    {n:4,chips:["service"],label:"Returns results ranked by relevance",sub:"Atlas Search relevance score"},
+  search:{title:"search posts",desc:"Full-text search using Atlas Search ($search pipeline #1). JWT validated against Redis.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"feed_service.search_posts(query)",sub:"Validates query is non-empty"},
+    {n:3,chips:["mongo"],label:"PostQueries.search_posts()",sub:"Atlas $search pipeline — fuzzy match maxEdits:1 on posts_search index"},
+    {n:4,chips:["service"],label:"Returns results ranked by Atlas relevance score",sub:""},
   ]},
-  recommendations:{title:"recommendations",desc:"Content-aware recommendations: combines Neo4j graph traversal with Atlas Search ($search pipeline #2).",steps:[
-    {n:1,chips:["service"],label:"feed_service.get_recommendations(user_id)",sub:""},
-    {n:2,chips:["neo4j"],label:"Neo4jQueries.get_recommendations()",sub:"FOLLOWS*2 — finds friends-of-friends not yet followed"},
-    {n:3,chips:["neo4j"],label:"Neo4jQueries.get_liked_post_ids()",sub:"Gets post IDs the user has liked for keyword extraction"},
-    {n:4,chips:["mongo"],label:"PostQueries.get_posts_by_ids()",sub:"Fetches liked post content to build keyword string"},
-    {n:5,chips:["mongo"],label:"PostQueries.search_posts_by_users()",sub:"Atlas $search compound: must=keywords + filter=rec_ids"},
-    {n:6,chips:["service"],label:"Fallback: latest-per-user",sub:"Used if user has no likes yet"},
+  notifications:{title:"notifications",desc:"Fetches the user's Redis inbox. Notifications are written by follow, like, and close_friend actions.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"notification_service.get_notifications(user_id, limit)",sub:""},
+    {n:3,chips:["redis"],label:"NotificationQueries.get_notifications()",sub:"ZREVRANGE inbox:{user_id} 0 limit-1 — sorted set ordered by timestamp"},
+    {n:4,chips:["service"],label:"Returns [{type, from_user_id, post_id, at}]",sub:"post_id is null for non-post notifications (follow, close_friend)"},
+  ]},
+  notifications_sample:{
+    request:{method:"GET",url:"/notifications/?limit=50",headers:{"Authorization":"Bearer {token}"},
+      note:"Notifications are created automatically when others follow you, like your posts, or add you as close friend"},
+    response:{notifications:[
+      {type:"like",from_user_id:"64f...",post_id:"64f...",at:1778000000},
+      {type:"follow",from_user_id:"64f...",post_id:null,at:1777999000},
+      {type:"close_friend",from_user_id:"64f...",post_id:null,at:1777998000}
+    ],count:3}
+  },
+  recommendations:{title:"recommendations",desc:"Content-aware recommendations: Neo4j graph traversal + Atlas $search pipeline #2. JWT validated against Redis.",steps:[
+    {n:1,chips:["redis"],label:"token_in_blocklist_loader check",sub:"EXISTS blocklist:{jti}"},
+    {n:2,chips:["service"],label:"feed_service.get_recommendations(user_id)",sub:""},
+    {n:3,chips:["neo4j"],label:"Neo4jQueries.get_recommendations()",sub:"FOLLOWS*2 — friends-of-friends not yet followed"},
+    {n:4,chips:["neo4j"],label:"Neo4jQueries.get_liked_post_ids()",sub:"Posts user has liked — used to extract keywords"},
+    {n:5,chips:["mongo"],label:"PostQueries.get_posts_by_ids()",sub:"Fetches liked post content to build keyword string"},
+    {n:6,chips:["mongo"],label:"PostQueries.search_posts_by_users()",sub:"Atlas $search compound: must=keywords + filter=rec_ids"},
+    {n:7,chips:["service"],label:"Fallback: latest-per-user",sub:"Used if user has no likes yet"},
   ]},
 };
 
@@ -675,69 +686,78 @@ const samples = {
     response:{access_token:"eyJhbGci..."}
   },
   logout:{
-    request:{method:"POST",url:"/auth/logout",headers:{"Authorization":"Bearer <token>"}},
+    request:{method:"POST",url:"/auth/logout",headers:{"Authorization":"Bearer {token}"}},
     response:{message:"Logged out successfully"}
   },
   view_profile:{
-    request:{method:"GET",url:"/users/me",headers:{"Authorization":"Bearer <token>"}},
+    request:{method:"GET",url:"/users/me",headers:{"Authorization":"Bearer {token}"}},
     response:{id:"64f1a2b3c4d5e6f7a8b9c0d1",username:"alice",email:"alice@test.com",bio:"Hello I am Alice",first_name:"Alice",last_name:"Smith"}
   },
   edit_profile:{
-    request:{method:"PATCH",url:"/users/me",headers:{"Authorization":"Bearer <token>"},
+    request:{method:"PATCH",url:"/users/me",headers:{"Authorization":"Bearer {token}"},
       body:{bio:"Updated bio",first_name:"Alice",last_name:"Smith"}},
     response:{id:"64f1a2b3c4d5e6f7a8b9c0d1",username:"alice",bio:"Updated bio"}
   },
   follow:{
-    request:{method:"POST",url:"/users/<user_id>/follow",headers:{"Authorization":"Bearer <token>"},
-      note:"Replace <user_id> with target user's MongoDB ObjectId"},
+    request:{method:"POST",url:"/users/{user_id}/follow",headers:{"Authorization":"Bearer {token}"},
+      note:"Replace {user_id} with target user's MongoDB ObjectId"},
     response:{message:"Followed successfully"}
   },
   unfollow:{
-    request:{method:"DELETE",url:"/users/<user_id>/follow",headers:{"Authorization":"Bearer <token>"}},
+    request:{method:"DELETE",url:"/users/{user_id}/follow",headers:{"Authorization":"Bearer {token}"}},
     response:{message:"Unfollowed successfully"}
   },
   block:{
-    request:{method:"POST",url:"/users/<user_id>/block",headers:{"Authorization":"Bearer <token>"}},
+    request:{method:"POST",url:"/users/{user_id}/block",headers:{"Authorization":"Bearer {token}"}},
     response:{message:"User blocked"}
   },
   close_friend:{
-    request:{method:"POST",url:"/users/<user_id>/close-friends",headers:{"Authorization":"Bearer <token>"}},
+    request:{method:"POST",url:"/users/{user_id}/close-friends",headers:{"Authorization":"Bearer {token}"}},
     response:{message:"Added to close friends"}
   },
   hop:{
-    request:{method:"GET",url:"/users/<user_id>/distance/<target_id>",headers:{"Authorization":"Bearer <token>"},
-      note:"Both IDs are MongoDB ObjectIds"},
+    request:{method:"GET",url:"/users/{user_id}/distance/{target_id}",headers:{"Authorization":"Bearer {token}"},
+      note:"Both IDs are MongoDB ObjectIds from /users/me response"},
     response:{distance:2,connected:true}
   },
   create_post:{
-    request:{method:"POST",url:"/posts/",headers:{"Authorization":"Bearer <token>"},
+    request:{method:"POST",url:"/posts/",headers:{"Authorization":"Bearer {token}"},
       body:{content:"Hello world, this is my first post about python coding!"}},
     response:{id:"64f1a2b3c4d5e6f7a8b9c0d2",author_id:"64f1a2b3c4d5e6f7a8b9c0d1",content:"Hello world, this is my first post about python coding!",likes_count:0}
   },
   like_post:{
-    request:{method:"POST",url:"/posts/<post_id>/like",headers:{"Authorization":"Bearer <token>"},
-      note:"Replace <post_id> with a MongoDB ObjectId from create post response"},
+    request:{method:"POST",url:"/posts/{post_id}/like",headers:{"Authorization":"Bearer {token}"},
+      note:"Replace {post_id} with a MongoDB ObjectId from create post response"},
     response:{message:"Post liked"}
   },
   delete_post:{
-    request:{method:"DELETE",url:"/posts/<post_id>",headers:{"Authorization":"Bearer <token>"},
+    request:{method:"DELETE",url:"/posts/{post_id}",headers:{"Authorization":"Bearer {token}"},
       note:"Only the post author can delete. Returns 403 for other users"},
     response:{message:"Post deleted"}
   },
   home_feed:{
-    request:{method:"GET",url:"/feed/?limit=20",headers:{"Authorization":"Bearer <token>"},
+    request:{method:"GET",url:"/feed/?limit=20",headers:{"Authorization":"Bearer {token}"},
       note:"Follow at least one user first, otherwise returns empty list"},
     response:{posts:[{id:"64f...",author_id:"64f...",content:"...",likes_count:3}],count:1}
   },
   search:{
-    request:{method:"GET",url:"/feed/search?q=python",headers:{"Authorization":"Bearer <token>"},
+    request:{method:"GET",url:"/feed/search?q=python",headers:{"Authorization":"Bearer {token}"},
       note:"Wait ~15s after creating posts for Atlas Search to index them"},
     response:{posts:[{id:"64f...",content:"Hello world, this is my first post about python coding!"}],count:1,query:"python"}
   },
+  notifications:{
+    request:{method:"GET",url:"/notifications/?limit=50",headers:{"Authorization":"Bearer {token}"},
+      note:"Notifications are created automatically when others follow you, like your posts, or add you as close friend"},
+    response:{notifications:[
+      {type:"like",from_user_id:"64f...",post_id:"64f...",at:1778000000},
+      {type:"follow",from_user_id:"64f...",post_id:null,at:1777999000},
+      {type:"close_friend",from_user_id:"64f...",post_id:null,at:1777998000}
+    ],count:3}
+  },
   recommendations:{
-    request:{method:"GET",url:"/feed/recommendations",headers:{"Authorization":"Bearer <token>"},
+    request:{method:"GET",url:"/feed/recommendations",headers:{"Authorization":"Bearer {token}"},
       note:"Requires: you follow user A, user A follows user B, user B has posts"},
-    response:{posts:[{id:"64f...",author_id:"<friend-of-friend-id>",content:"..."}],count:1}
+    response:{posts:[{id:"64f...",author_id:"{friend-of-friend-id}",content:"..."}],count:1}
   },
 };
 
@@ -782,7 +802,6 @@ function sampleHTML(key) {
       <div class="sample-method">
         <span class="method-pill ${methodClass}">${req.method}</span>
         <span class="sample-url">${req.url}</span>
-        <button class="copy-btn" onclick="copyJSON(this, ${JSON.stringify(JSON.stringify(reqObj))})">copy</button>
       </div>
       ${note}`;
 
@@ -795,7 +814,6 @@ function sampleHTML(key) {
       <div class="sample-method">
         <span class="method-pill get" style="background:rgba(167,139,250,0.12);color:#a78bfa">RES</span>
         <span class="sample-url">example response</span>
-        <button class="copy-btn" onclick="copyJSON(this, ${JSON.stringify(JSON.stringify(s.response))})">copy</button>
       </div>
       <pre class="sample-json">${jsonHL(s.response)}</pre>
     </div>
