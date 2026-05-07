@@ -9,3 +9,5 @@ pydantic[email]
 pytest
 black
 flask-bcrypt
+pydantic[email]>=2.0
+requests
