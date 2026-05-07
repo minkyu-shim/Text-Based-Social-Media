@@ -1,0 +1,65 @@
+.card {
+  padding: 16px 0;
+  border-bottom: 1px solid #E5E2E0;
+}
+
+.skeleton {
+  background: #E5E2E0;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes shimmer {
+    from {
+      background-position: -400px 0;
+    }
+    to {
+      background-position: 400px 0;
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, #E5E2E0 25%, #EEEBE8 50%, #E5E2E0 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+  }
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.skeletonUsername {
+  height: 12px;
+  width: 80px;
+}
+
+.skeletonDot {
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+}
+
+.skeletonTime {
+  height: 10px;
+  width: 40px;
+}
+
+.skeletonContent {
+  height: 12px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.skeletonContent.short {
+  width: 60%;
+}
+
+.skeletonMeta {
+  height: 10px;
+  width: 48px;
+  margin-top: 10px;
+}

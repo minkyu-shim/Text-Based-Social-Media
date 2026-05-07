@@ -1,0 +1,29 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: #FEFCFB;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 64px; /* Space for bottom nav on mobile */
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding-bottom: 0;
+  }
+}
+
+.content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: 0 24px;
+  }
+}

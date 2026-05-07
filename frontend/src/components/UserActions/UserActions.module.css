@@ -1,0 +1,151 @@
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  align-items: center;
+}
+
+.followBtn {
+  position: relative;
+  overflow: hidden;
+  min-width: 96px;
+  padding: 9px 20px;
+  background: #034078;
+  color: #FEFCFB;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.followBtn.following {
+  background: transparent;
+  color: #034078;
+  border: 1.5px solid #034078;
+}
+
+.followBtn:hover:not(:disabled) {
+  background: #1282A2;
+  color: #FEFCFB;
+  border-color: #1282A2;
+}
+
+.followBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.labelWrap {
+  position: relative;
+  height: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  display: block;
+  transition: opacity 160ms ease, transform 160ms ease;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.labelFollow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.labelFollowing {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.followBtn.following .labelFollow {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.followBtn.following .labelFollowing {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .followBtn:active {
+    transform: scale(0.96);
+    transition: transform 80ms ease;
+  }
+}
+
+.closeFriendBtn {
+  padding: 9px 16px;
+  background: transparent;
+  color: #1282A2;
+  border: 1.5px solid #1282A2;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  height: 38px;
+}
+
+.closeFriendBtn.active {
+  background: #1282A2;
+  color: #FEFCFB;
+}
+
+.closeFriendBtn:hover:not(:disabled) {
+  background: #1282A2;
+  color: #FEFCFB;
+}
+
+.closeFriendBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.blockBtn {
+  padding: 9px 16px;
+  background: transparent;
+  color: #C0392B;
+  border: 1.5px solid #C0392B;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+  height: 38px;
+}
+
+.blockBtn.blocked {
+  background: #C0392B;
+  color: #FEFCFB;
+}
+
+.blockBtn:hover:not(:disabled) {
+  background: rgba(192, 57, 43, 0.1);
+}
+
+.blockBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hopDistance {
+  font-size: 13px;
+  color: #666666;
+  font-family: 'IBM Plex Mono', monospace;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.hopDistance strong {
+  color: #034078;
+}

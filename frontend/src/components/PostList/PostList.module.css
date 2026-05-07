@@ -1,0 +1,43 @@
+.list {
+  /* No extra spacing — cards manage their own borders */
+}
+
+.errorBox {
+  padding: 16px;
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 8px;
+  background: rgba(192, 57, 43, 0.05);
+  color: #C0392B;
+  font-size: 14px;
+  margin: 24px 0;
+}
+
+.errorBox p {
+  margin-bottom: 12px;
+}
+
+.retryBtn {
+  padding: 8px 16px;
+  background: #034078;
+  color: #FEFCFB;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.retryBtn:hover {
+  background: #1282A2;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: #666666;
+  font-size: 15px;
+}
+
+.empty p {
+  margin-bottom: 8px;
+}

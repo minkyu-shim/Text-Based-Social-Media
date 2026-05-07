@@ -1,5 +1,6 @@
 flask
 flask-jwt-extended
+flask-cors
 pymongo[srv]
 neo4j
 redis
@@ -8,3 +9,5 @@ pydantic[email]
 pytest
 black
 flask-bcrypt
+pydantic[email]>=2.0
+requests

@@ -1,0 +1,186 @@
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    min-width: 220px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    padding: 24px 16px;
+    border-right: 1px solid #E5E2E0;
+    background: #FEFCFB;
+  }
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #034078;
+  letter-spacing: -0.5px;
+  padding: 0 8px;
+  margin-bottom: 32px;
+  text-decoration: none;
+}
+
+.logo:hover {
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111111;
+  text-decoration: none;
+  position: relative;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.navLink:hover {
+  background: rgba(18, 130, 162, 0.07);
+  color: #1282A2;
+  text-decoration: none;
+}
+
+.navLink.active {
+  background: rgba(3, 64, 120, 0.08);
+  color: #034078;
+  font-weight: 600;
+}
+
+.navIcon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.navLabel {
+  position: relative;
+}
+
+.navLabel::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #1282A2;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .navLabel::after {
+    transition: width 180ms ease;
+  }
+
+  .navLink:hover .navLabel::after {
+    width: 100%;
+  }
+}
+
+.badgeWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #034078;
+  color: #FEFCFB;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes badgePop {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.2);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .badge.popping {
+    animation: badgePop 220ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+}
+
+.bottom {
+  padding-top: 16px;
+  border-top: 1px solid #E5E2E0;
+  margin-top: auto;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.userHandle {
+  font-size: 13px;
+  color: #666666;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666666;
+  border-radius: 8px;
+  transition: background 150ms ease, color 150ms ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoutBtn:hover {
+  background: rgba(192, 57, 43, 0.07);
+  color: #C0392B;
+}
