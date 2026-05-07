@@ -9,6 +9,9 @@ dist/
 build/
 
 CLAUDE.md
+.claude/
+FRONTEND_DESIGN.md
+FRONTEND_IMPLEMENTATION_PLAN.md
 
 # Virtual environment
 .venv/

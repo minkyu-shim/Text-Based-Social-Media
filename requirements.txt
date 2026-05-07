@@ -1,5 +1,6 @@
 flask
 flask-jwt-extended
+flask-cors
 pymongo[srv]
 neo4j
 redis

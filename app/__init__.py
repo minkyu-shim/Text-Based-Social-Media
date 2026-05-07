@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 from .config import Config
 from .db.mongo import init_mongo
@@ -15,6 +16,8 @@ from .routes.notifications import notifications_bp
 def create_app(config=Config):
     app = Flask(__name__)
     app.config.from_object(config)
+
+    CORS(app, origins=["http://localhost:5173", "http://localhost:8081"], supports_credentials=False)
 
     jwt = JWTManager(app)
 

@@ -1,0 +1,76 @@
+.box {
+  padding: 16px 0;
+  border-bottom: 2px solid #E5E2E0;
+  margin-bottom: 8px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #E5E2E0;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #111111;
+  background: #FEFCFB;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color 150ms ease;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.textarea:focus {
+  border-color: #1282A2;
+  box-shadow: 0 0 0 3px rgba(18, 130, 162, 0.1);
+}
+
+.textarea::placeholder {
+  color: #999999;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.charCount {
+  font-size: 13px;
+  color: #666666;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.charCount.nearLimit {
+  color: #C0392B;
+  font-weight: 600;
+}
+
+.postBtn {
+  padding: 8px 20px;
+  background: #034078;
+  color: #FEFCFB;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.postBtn:hover:not(:disabled) {
+  background: #1282A2;
+}
+
+.postBtn:disabled {
+  background: rgba(3, 64, 120, 0.45);
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #C0392B;
+}

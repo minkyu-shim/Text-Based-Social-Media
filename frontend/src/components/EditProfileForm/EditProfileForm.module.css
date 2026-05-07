@@ -1,0 +1,106 @@
+.form {
+  padding: 16px;
+  border: 1px solid #E5E2E0;
+  border-radius: 8px;
+  background: #FEFCFB;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #034078;
+  margin-bottom: 16px;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.field input,
+.field textarea {
+  padding: 9px 12px;
+  border: 1px solid #E5E2E0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111111;
+  background: #FEFCFB;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: #1282A2;
+  box-shadow: 0 0 0 3px rgba(18, 130, 162, 0.1);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.saveBtn {
+  padding: 9px 20px;
+  background: #034078;
+  color: #FEFCFB;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #1282A2;
+}
+
+.saveBtn:disabled {
+  background: rgba(3, 64, 120, 0.45);
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  padding: 9px 20px;
+  background: transparent;
+  color: #666666;
+  border: 1px solid #E5E2E0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.cancelBtn:hover {
+  border-color: #1282A2;
+  color: #1282A2;
+}
+
+.error {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #C0392B;
+}

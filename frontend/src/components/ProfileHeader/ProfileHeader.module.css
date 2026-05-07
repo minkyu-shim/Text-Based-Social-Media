@@ -1,0 +1,59 @@
+.header {
+  padding: 24px 0 16px;
+  border-bottom: 2px solid #E5E2E0;
+  margin-bottom: 8px;
+}
+
+.displayName {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 2px;
+  letter-spacing: -0.3px;
+}
+
+.handle {
+  font-size: 15px;
+  color: #666666;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 8px;
+}
+
+.email {
+  font-size: 14px;
+  color: #666666;
+  margin-bottom: 8px;
+}
+
+.bio {
+  font-size: 15px;
+  color: #111111;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.joined {
+  font-size: 13px;
+  color: #666666;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.editBtn {
+  margin-top: 16px;
+  padding: 8px 20px;
+  background: transparent;
+  color: #034078;
+  border: 1.5px solid #034078;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.editBtn:hover {
+  background: #034078;
+  color: #FEFCFB;
+}
