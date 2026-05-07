@@ -95,10 +95,10 @@ class PostQueries:
 
     @staticmethod
     def search_posts_by_users(user_ids: list, keywords: str, limit: int = 20) -> list:
-
         db = get_db()
         pipeline = [
-            {"": {
+            # Added "$search"
+            {"$search": { 
                 "index": "posts_search",
                 "compound": {
                     "must": [{
@@ -116,9 +116,9 @@ class PostQueries:
                     }]
                 }
             }},
-            {"": limit},
-            {"": {"id": {"": ""}}},
-            {"": {"_id": 0}}
+            {"$limit": limit},
+            {"$addFields": {"id": {"$toString": "$_id"}}}, # Added "$addFields" and "$toString"
+            {"$project": {"_id": 0}} 
         ]
         return list(db.posts.aggregate(pipeline))
 
